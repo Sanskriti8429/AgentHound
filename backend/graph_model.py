@@ -12,7 +12,7 @@ class Node:
 class Edge:
     source:str
     target: str
-    kind: Literal["can_invoke", "can_delegate", "can_read", "can_write"]
+    kind: Literal["can_invoke", "can_delegate", "can_read", "can_write", "can_spawn"]
     weight: int
     note: str= ""
     
