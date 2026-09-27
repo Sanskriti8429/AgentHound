@@ -1,0 +1,146 @@
+nodes:
+  - id: research_agent
+    type: agent
+    privilege: low
+    description: "Answers open web questions. Can only browse and write scratch notes to shared memory."
+
+  - id: orchestrator_agent
+    type: agent
+    privilege: high
+    description: "Coordinates the team. Reads shared memory each cycle to decide what to do next, and can delegate or spawn agents."
+
+  - id: finance_agent
+    type: agent
+    privilege: high
+    description: "The only pre-existing agent allowed to touch financial records. Trusts instructions from the orchestrator."
+
+  - id: email_agent
+    type: agent
+    privilege: medium
+    description: "Can send email on behalf of the team. Trusts instructions from the orchestrator."
+
+  - id: support_agent
+    type: agent
+    privilege: low
+    description: "Handles support tickets. Second untrusted entry point, seperate from research_agent."
+
+  - id: audit_agent
+    type: agent
+    privilege: high
+    description: "Not pre-existing, dynamically spawned by the orchestrator when it decides an audit is needed. Has direct finance_db access."
+
+  - id: shared_memory
+    type: resource
+    privilege: shared
+    description: "Shared scratchpad all agents can write to; no sanitization of content."
+
+  - id: web_search_tool
+    type: tool
+    privilege: low
+    description: "Public web search. Returns raw, untrusted page content."
+
+  - id: ticket_tool
+    type: tool
+    privilege: low
+    description: "Returns raw, untrusted support ticket content."
+
+  - id: send_email_tool
+    type: tool
+    privilege: medium
+    description: "Sends an email as the organization."
+
+  - id: delete_file_tool
+    type: tool
+    privilege: high
+    description: "Deletes files from the production finance record store. CROWN JEWEL."
+
+  - id: finance_db
+    type: resource
+    privilege: high
+    description: "Production financial database. CROWN JEWEL."
+
+  - id: analytics_db
+    type: resource
+    privilege: medium
+    description: "Non-sensitive analytics store. Legitimate, low risk target for contrast."
+
+
+edges:
+
+  - source: research_agent
+    target: web_search_tool
+    kind: can_invoke
+    weight: 0
+    note: "Low-priv agent using a low-priv tool. No boundary crossed."
+
+  - source: research_agent
+    target: shared_memory
+    kind: can_write
+    weight: 2
+    note: "Low-priv agent writes untrusted content into a shared resource. Soft escalation setup."
+
+  - source: support_agent
+    target: ticket_tool
+    kind: can_invoke
+    weight: 0
+    note: "Low-priv agent using a low-priv tool. No boundary crossed."
+
+  - source: support_agent
+    target: shared_memory
+    kind: can_write
+    weight: 2
+    note: "Second untrusted writer into shared memory- a different entry point into the same escalation mechanism."
+
+  - source: orchestrator_agent
+    target: shared_memory
+    kind: can_read
+    weight: 5
+    note: "High-priv agent reads low-priv-authored content and treats it as trusted planning input. Core escalation edge."
+
+  - source: orchestrator_agent
+    target: finance_agent
+    kind: can_delegate
+    weight: 1
+    note: "High-to-high delegation. No real boundary crossed on its own."
+
+  - source: orchestrator_agent
+    target: email_agent
+    kind: can_delegate
+    weight: 1
+    note: "High-to-medium delegation."
+
+  - source: orchestrator_agent
+    target: audit_agent
+    kind: can_spawn
+    weight: 1
+    note: "Orchestrator dynamically spawns a new high-priv agent. Spawning within its own trust level, low weight alone."
+
+  - source: finance_agent
+    target: delete_file_tool
+    kind: can_invoke
+    weight: 8
+    note: "Direct invocation of a crown-jewel tool."
+
+  - source: finance_agent
+    target: finance_db
+    kind: can_invoke
+    weight: 8
+    note: "Direct access to a crown-jewel resource."
+
+  - source: audit_agent
+    target: finance_db
+    kind: can_invoke
+    weight: 8
+    note: "Spawned agent has direct crown-jewel access, escalation via spawn instead of delegation."
+
+  - source: email_agent
+    target: send_email_tool
+    kind: can_invoke
+    weight: 3
+    note: "Medium-priv agent invoking a medium-priv tool."
+
+  - source: email_agent
+    target: analytics_db
+    kind: can_invoke
+    weight: 1
+    note: "Legitimate, low-risk path to a non-sensitive resource. Should rank far below crown-jewel paths."
