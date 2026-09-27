@@ -45,6 +45,37 @@ def score_path(graph, path):
         total += edge_data["weight"]
     return total
 
+def add_influence_edges(graph):
+    """
+    Detect write+read pairson the same resource and add a derived
+    'can_influence' edge from write to reader, since this represents
+    a real indirect escalation path (e.g. prompt injection via shared
+    memory) that plain forward traversal can't see.
+    """
+    for resource in list(graph.nodes):
+        writers=[
+            (source, data) for source, _, data in graph.in_edges(resource, data= True)
+            if data["kind"] == "can_write"
+        ]
+        readers=[
+            (source, data) for source, _, data in graph.in_edges(resource, data= True)
+            if data["kind"] == "can_read"
+        ]
+        
+        for writer_id, write_data in writers:
+            for reader_id, read_data in readers:
+                if writer_id==reader_id:
+                    continue
+                graph.add_edge(
+                    writer_id,
+                    reader_id,
+                    kind="can_influence",
+                    weight=write_data["weight"] +read_data["weight"],
+                    note= f"Derived {writer_id} writes to {resource}, {reader_id} reads it and may act on untrusted content."
+                    )
+        
+    return graph
+
 def find_ranked_paths(graph, start_node, end_node):
     """Find every path start->end, score each, return sorted most-to-least dangerous."""
     paths= find_all_paths(graph, start_node, end_node)
@@ -55,6 +86,7 @@ def find_ranked_paths(graph, start_node, end_node):
 if __name__ == "__main__":
     nodes, edges= load_testbed("config/testbed.yaml")
     graph= build_graph(nodes, edges)
+    graph= add_influence_edges(graph)
     
     print("=== Dangerous routes to finance_db ===")
     ranked= find_ranked_paths(graph, "research_agent", "finance_db")
@@ -64,4 +96,9 @@ if __name__ == "__main__":
     print("\n=== Safe route to analytics_db ===")
     ranked_safe= find_ranked_paths(graph, "email_agent", "analytics_db")
     for path, score in ranked_safe:
+        print(f"Score {score}: {'->'.join(path)}")
+        
+    print("=== Dangerous routes to finance_db ===")
+    ranked= find_ranked_paths(graph, "support_agent", "finance_db")
+    for path, score in ranked:
         print(f"Score {score}: {'->'.join(path)}")
