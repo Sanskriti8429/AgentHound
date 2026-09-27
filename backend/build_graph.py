@@ -1,5 +1,6 @@
 import networkx as nx
 from graph_model import Node, Edge
+from loader import load_testbed
 
 def build_graph(nodes: list[Node], edges: list[Edge]) -> nx.DiGraph:
     graph= nx.DiGraph()
@@ -13,16 +14,9 @@ def build_graph(nodes: list[Node], edges: list[Edge]) -> nx.DiGraph:
     return graph
 
 if __name__ == "__main__":
-    nodes=[
-        Node(id="research_agent", type="agent", privilege="low", description="Answers open web questions."),
-        Node(id="shared_memory", type="resource", privilege="shared", description="Shared scratchpad all agents can write to."),
-    ]
-    
-    edges=[
-        Edge(source="research_agent", target="shared_memory", kind="can_write", weight=2, note="Research agent writes untrusted content to shared memory."),
-    ]
-    
+    nodes, edges= load_testbed("config/testbed.yaml")
     graph= build_graph(nodes,edges)
     
+    print(f"Graph has {graph.number_of_nodes()} nodes and {graph.number_of_edges()} edges")
     print("Nodes:\n", graph.nodes(data=True))
     print("\nEdges:\n", graph.edges(data=True))
