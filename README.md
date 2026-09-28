@@ -11,7 +11,7 @@ AgentHound models a multi-agent AI system- agents, tools, and shared resources- 
 * In active development.
 
 - [x] Graph data model (nodes, edges, trust boundaries)
-- [ ] Path-finding engine (BFS + weighted ranking by trust boundary crossings)
+- [x] Path-finding engine (BFS reachability, all-simple-paths enumeration, Dijkstra safest-path, risk ranking by trust-boundary weight, derived `can_influence` edges for shared-memory attacks)
 - [ ] Multi-agent testbed (LangChain + Ollama)
 - [ ] Instrumented edge capturefrom real agent execution
 - [ ] Red-team demo: predicted vs. executed prompt-injection attack path
