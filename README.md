@@ -47,6 +47,7 @@ Python, NetworkX, FastAPI, LangChain, Ollama, D3.js
 ## Getting Started
 
 ```bash
+git clone https://github.com/Sanskriti8429/AgentHound.git
 cd agenthound
 python -m venv venv
 venv\Scripts\activate
