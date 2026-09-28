@@ -1,6 +1,7 @@
 from collections import deque
 from loader import load_testbed
 from build_graph import build_graph
+import heapq
 
 def bfs_reachable(graph, start_node):
     """Return the set of all nodes reachable from start_node, ignoring weights."""
@@ -83,22 +84,61 @@ def find_ranked_paths(graph, start_node, end_node):
     scored.sort(key= lambda item: item[1], reverse= True)
     return scored
 
+def dijkstra_safest_path(graph, start_node, end_node):
+    """Find the single lowest-total-weight (safest) path from start to end"""
+    distances= {start_node: 0}
+    previous= {}
+    visited= set()
+    
+    priority_queue= [(0, start_node)]
+    
+    while priority_queue:
+        current_distance, current_node= heapq.heappop(priority_queue)
+        
+        if current_node in visited:
+            continue
+        visited.add(current_node)
+        
+        if current_node == end_node:
+            break
+        
+        for neighbour in graph.successors(current_node):
+            edge_data= graph.get_edge_data(current_node, neighbour)
+            weight= edge_data["weight"]
+            new_distance= current_distance+ weight
+            
+            if neighbour not in distances or new_distance < distances[neighbour]:
+                distances[neighbour]= new_distance
+                previous[neighbour]= current_node
+                heapq.heappush(priority_queue, (new_distance, neighbour))
+                
+    if end_node not in distances:
+        return None, None
+    
+    path= [end_node]
+    while path[-1] != start_node:
+        path.append(previous[path[-1]])
+    path.reverse()
+    
+    return path, distances[end_node]
+
 if __name__ == "__main__":
     nodes, edges= load_testbed("config/testbed.yaml")
     graph= build_graph(nodes, edges)
     graph= add_influence_edges(graph)
     
-    print("=== Dangerous routes to finance_db ===")
-    ranked= find_ranked_paths(graph, "research_agent", "finance_db")
-    for path, score in ranked:
+    print("=== All ranked routes: research_agent-> finance_db ===")
+    for path, score in find_ranked_paths(graph, "research_agent", "finance_db"):
         print(f"Score {score}: {'->'.join(path)}")
         
-    print("\n=== Safe route to analytics_db ===")
-    ranked_safe= find_ranked_paths(graph, "email_agent", "analytics_db")
-    for path, score in ranked_safe:
+    print("=== All ranked routes: support_agent-> finance_db ===")
+    for path, score in find_ranked_paths(graph, "support_agent", "finance_db"):
         print(f"Score {score}: {'->'.join(path)}")
         
-    print("=== Dangerous routes to finance_db ===")
-    ranked= find_ranked_paths(graph, "support_agent", "finance_db")
-    for path, score in ranked:
-        print(f"Score {score}: {'->'.join(path)}")
+    print("=== Dijkstra safest path: research_agent-> finance_db ===")
+    path, score = dijkstra_safest_path(graph, "research_agent", "finance_db")
+    print(f"Score {score}: {'->'.join(path)}")
+        
+    print("=== Dijkstra safest path: email_agent-> analytics_db ===")
+    path, score = dijkstra_safest_path(graph, "email_agent", "analytics_db")
+    print(f"Score {score}: {'->'.join(path)}")
