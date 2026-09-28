@@ -112,7 +112,7 @@ edges:
   - source: orchestrator_agent
     target: audit_agent
     kind: can_spawn
-    weight: 1
+    weight: 3
     note: "Orchestrator dynamically spawns a new high-priv agent. Spawning within its own trust level, low weight alone."
 
   - source: finance_agent
