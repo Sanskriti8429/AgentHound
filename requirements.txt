@@ -2,3 +2,5 @@ networkx
 pyyaml
 fastapi
 uvicorn
+langchain
+langchain-ollama
