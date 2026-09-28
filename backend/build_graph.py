@@ -6,7 +6,7 @@ def build_graph(nodes: list[Node], edges: list[Edge]) -> nx.DiGraph:
     graph= nx.DiGraph()
     
     for node in nodes:
-        graph.add_node(node.id, type=node.type, privilege=node.privilege, description= node.description)
+        graph.add_node(node.id, type=node.type, privilege=node.privilege, description= node.description, crown_jewel= node.crown_jewel)
         
     for edge in edges:
         graph.add_edge(edge.source, edge.target, kind=edge.kind, weight=edge.weight, note=edge.note)

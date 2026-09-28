@@ -38,3 +38,24 @@ def get_paths(start: str, end: str):
         "end": end,
         "paths": [{"path": path, "score": score} for path, score in ranked],
     }
+    
+@app.get("/analyze")
+def analyze():
+    entry_points=[
+        n for n, d in graph.nodes(data=True)
+        if d["type"]== "agent" and d["privilege"]== "low"
+    ]
+    crown_jewels=[
+        n for n, d in graph.nodes(data=True) if d.get("crown_jewel")
+    ]
+    
+    findings= []
+    for start in entry_points:
+        for end in crown_jewels:
+            for path, score in find_ranked_paths(graph, start,end):
+                findings.append(
+                    {"start": start, "end": end, "path": path, "score": score}
+                )
+                
+    findings.sort(key= lambda f: f["score"], reverse= True)
+    return{"entry_points": entry_points, "crown_jewels": crown_jewels, "findings": findings}

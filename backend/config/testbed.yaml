@@ -53,11 +53,13 @@ nodes:
     type: tool
     privilege: high
     description: "Deletes files from the production finance record store. CROWN JEWEL."
+    crown_jewel: true
 
   - id: finance_db
     type: resource
     privilege: high
     description: "Production financial database. CROWN JEWEL."
+    crown_jewel: true
 
   - id: analytics_db
     type: resource

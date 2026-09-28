@@ -7,6 +7,7 @@ class Node:
     type: Literal["agent", "tool", "resource"]
     privilege: Literal["low", "medium", "high", "shared"]
     description: str=""
+    crown_jewel: bool= False
     
 @dataclass
 class Edge:
